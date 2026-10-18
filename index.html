@@ -1,1 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Infinite Game</title>
 
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0a1020;color:white;font-family:Arial,sans-serif}
+button{cursor:pointer;color:white;background:#202f49;border:1px solid #ffffff30;border-radius:10px;padding:11px;font-weight:bold}
+button:hover{background:#394b6c}
+.primary{background:#6d43ec}
+.wrap{max-width:1050px;margin:auto;padding:16px}
+.hero{background:linear-gradient(120deg,#39246c,#182d4a,#163c48);padding:22px;border-radius:15px;margin-bottom:18px}
+h1{font-size:30px;margin:5px 0}
+h2{font-size:23px}
+.muted{color:#a8b8d2;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tile{padding:0;text-align:left;overflow:hidden;background:#152239}
+.art{height:100px;display:flex;align-items:center;justify-content:center;font-size:48px;background:linear-gradient(135deg,#294568,#171b37)}
+.info{padding:12px}
+.info p{font-size:12px;color:#b6c5dc}
+.panel{background:#131e33;border:1px solid #293b58;border-radius:14px;padding:13px;margin-top:10px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.stat{background:#1c2a43;padding:9px;border-radius:9px;text-align:center;font-size:12px}
+.stat strong{display:block;font-size:20px;color:#c5b4ff}
+.hide{display:none!important}
+.playhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px}
+canvas{width:100%;height:auto;aspect-ratio:16/9;background:#17243b;border-radius:12px;display:block;touch-action:manipulation}
+.tools{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-top:9px}
+.answers{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;max-width:260px;margin:auto}
+.controls button{font-size:20px;padding:12px}
+.empty{visibility:hidden}
+@media(min-width:700px){.grid{grid-template-columns:repeat(4,1fr)}.art{height:125px}}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<header>
+<div class="muted">INFINITE STUDIOS</div>
+<h1>THE INFINITE <span style="color:#a993ff">GAME</span></h1>
+</header>
+
+<section id="home">
+<div class="hero">
+<div class="muted">YOUR NEXT ADVENTURE STARTS HERE</div>
+<h2>One world. Endless games.</h2>
+<p>Choose a world and start playing!</p>
+<div class="muted">8 WORLDS • KEYBOARD + TOUCH • SOLO PLAY</div>
+</div>
+
+<h2>Choose Your Game</h2>
+
+<div class="grid">
+<button class="tile" data-game="drive">
+<div class="art">🏎️</div>
+<div class="info"><b>Multiplication Drive</b><p>Answer times tables to speed up.</p></div>
+</button>
+
+<button class="tile" data-game="battle">
+<div class="art">⚔️</div>
+<div class="info"><b>Multiplayer Battle</b><p>Two players battle in an arena.</p></div>
+</button>
+
+<button class="tile" data-game="zombie">
+<div class="art">🧟</div>
+<div class="info"><b>Zombie Survival</b><p>Fight zombies and survive waves.</p></div>
+</button>
+
+<button class="tile" data-game="street">
+<div class="art">🚘</div>
+<div class="info"><b>Street Race</b><p>Dodge traffic and race.</p></div>
+</button>
+
+<button class="tile" data-game="space">
+<div class="art">🚀</div>
+<div class="info"><b>Space Escape</b><p>Reach 10,000 FT to escape.</p></div>
+</button>
+
+<button class="tile" data-game="coins">
+<div class="art">🪙</div>
+<div class="info"><b>Coin Hunt</b><p>Explore and collect coins.</p></div>
+</button>
+
+<button class="tile" data-game="roblox">
+<div class="art">🧱</div>
+<div class="info"><b>Cartoon Roblox</b><p>Jump across platforms.</p></div>
+</button>
+
+<button class="tile" data-game="minecraft">
+<div class="art">⛏️</div>
+<div class="info"><b>Cartoon Minecraft</b><p>Mine blocks and craft tools.</p></div>
+</button>
+</div>
+
+<div class="panel">
+<b>🌎 Your Adventure Stats</b>
+<div class="stats">
+<div class="stat"><strong id="total">0</strong>Coins</div>
+<div class="stat"><strong id="wins">0</strong>Wins</div>
+<div class="stat"><strong>8</strong>Worlds</div>
+</div>
+</div>
+</section>
+
+<section id="play" class="hide">
+<div class="playhead">
+<button id="back">← Menu</button>
+<div style="text-align:right">
+<b id="title">Game</b>
+<div class="muted" id="sub">Ready</div>
+</div>
+</div>
+
+<div class="stats">
+<div class="stat"><strong id="score">0</strong>Score / FT</div>
+<div class="stat"><strong id="health">100</strong>Health</div>
+<div class="stat"><strong id="clock">60</strong>Seconds</div>
+</div>
+
+<canvas id="canvas" width="800" height="450"></canvas>
+
+<div class="panel" id="message">Press Start Game to begin!</div>
+
+<div id="quiz" class="panel hide">
+<div id="question" style="font-size:25px;text-align:center;font-weight:bold"></div>
+<div id="answers" class="answers"></div>
+</div>
+
+<div class="panel">
+<div id="primary-tools" class="tools">
+<button class="primary" id="start">▶ Start Game</button>
+</div>
+<div id="extra-tools" class="tools"></div>
+</div>
+
+<div class="panel">
+<p class="muted" style="text-align:center">MOVEMENT CONTROLS</p>
+<div class="controls">
+<span class="empty"></span><button data-move="up">▲</button><span class="empty"></span>
+<button data-move="left">◀</button>
+<button data-move="down">▼</button>
+<button data-move="right">▶</button>
+</div>
+<p class="muted" style="text-align:center">Computer: WASD or arrow keys. Phones: touch the controls.</p>
+</div>
+</section>
+</div>
+
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const canvas = $("canvas");
+const ctx = canvas.getContext("2d");
+
+const games = {
+drive:["Multiplication Drive","Answer multiplication questions to speed up."],
+battle:["Multiplayer Battle","Player 1 uses WASD. Player 2 uses arrow keys."],
+zombie:["Zombie Survival","Fight zombies, earn coins, and survive waves."],
+street:["Street Race","Dodge traffic and reach the finish."],
+space:["Space Escape","Reach 2,500 FT to enter space and 10,000 FT to escape."],
+coins:["Coin Hunt","Explore and collect coins."],
+roblox:["Cartoon Roblox","Jump across platforms and reach the checkpoint."],
+minecraft:["Cartoon Minecraft","Mine blocks and craft pickaxes."]
+};
+
+let game="drive",running=false,ended=false;
+let score=0,health=100,time=60,elapsed=0,frame=0,last=0;
+let player={x:400,y:335,vy:0};
+let p2={x:510,y:335,hp:100};
+let coins=[],foes=[],blocks=[],keys={};
+let wave=1,ft=0,speed=0,invuln=0;
+let craft={},selectedTool="Wood Pickaxe";
+let question={a:7,b:8,ans:56};
+
+let saved={coins:0,wins:0};
+try{
+ saved={...saved,...JSON.parse(localStorage.getItem("infiniteGameStats")||"{}")};
+}catch(e){}
+
+function save(){
+ try{localStorage.setItem("infiniteGameStats",JSON.stringify(saved));}catch(e){}
+ $("total").textContent=saved.coins;
+ $("wins").textContent=saved.wins;
+}
+save();
+
+const rand=n=>Math.floor(Math.random()*n);
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+
+function addButton(label,fn,primary=false){
+ const b=document.createElement("button");
+ b.textContent=label;
+ if(primary)b.className="primary";
+ b.onclick=fn;
+ $("extra-tools").appendChild(b);
+ return b;
+}
+
+function home(){
+ running=false;
+ ended=false;
+ $("play").classList.add("hide");
+ $("home").classList.remove("hide");
+ save();
+ drawMenu();
+}
+
+function openGame(g){
+ game=g;
+ running=false;
+ ended=false;
+ score=0;
+ health=100;
+ time=60;
+ elapsed=0;
+ frame=0;
+ wave=1;
+ ft=0;
+ speed=0;
+ player={x:400,y:335,vy:0};
+ p2={x:510,y:335,hp:100};
+ keys={};
+ craft={};
+ selectedTool="Wood Pickaxe";
+ coins=[];
+ foes=[];
+ blocks=[];
+
+ for(let i=0;i<12;i++)spawnCoin();
+ for(let i=0;i<5;i++)spawnFoe();
+
+ $("home").classList.add("hide");
+ $("play").classList.remove("hide");
+ $("title").textContent=games[g][0];
+ $("sub").textContent=games[g][1];
+ $("score").textContent="0";
+ $("health").textContent="100";
+ $("clock").textContent="60";
+ $("message").textContent="Press Start Game to begin!";
+ $("quiz").classList.toggle("hide",g!=="drive");
+
+ $("primary-tools").innerHTML="";
+ $("extra-tools").innerHTML="";
+ $("start").textContent="▶ Start Game";
+ $("primary-tools").appendChild($("start"));
+ $("start").onclick=startGame;
+
+ if(g==="drive"){
+  addButton("1 Minute",()=>setTime(60));
+  addButton("5 Minutes",()=>setTime(300));
+  addButton("10 Minutes",()=>setTime(600));
+ }
+ if(g==="space")addButton("TAP TO FLY +25 FT",addFeet,true);
+ if(g==="zombie"){
+  addButton("Attack / Shoot",attack,true);
+  addButton("Heal (50 Coins)",heal);
+  addButton("Next Wave",nextWave);
+ }
+ if(g==="minecraft"){
+  addButton("Mine Block",mine,true);
+  addButton("Craft Tool",craftTool);
+  addButton("Change Tool",cycleTool);
+ }
+ if(g==="roblox"){
+  addButton("JUMP",jump,true);
+  addButton("Reset Checkpoint",()=>{
+   player.x=65;player.y=335;player.vy=0;
+   $("message").textContent="Back at checkpoint.";
+  });
+ }
+ if(g==="coins")addButton("Collect Nearby Coins",collect,true);
+ if(g==="battle"){
+  addButton("Player 1 Attack (F)",()=>fight(1),true);
+  addButton("Player 2 Attack (Enter)",()=>fight(2));
+ }
+ if(g==="street")addButton("Boost",()=>{if(running)speed+=3},true);
+
+ newQuestion();
+ updateHud();
+ draw();
+}
+
+function setTime(n){
+ if(!running){time=n;$("clock").textContent=n;}
+}
+
+function spawnCoin(){
+ coins.push({x:35+rand(730),y:80+rand(290),r:9});
+}
+
+function spawnFoe(){
+ foes.push({x:30+rand(740),y:90+rand(260),hp:1+Math.floor(wave/3),alive:true});
+}
+
+function startGame(){
+ if(ended){openGame(game);return;}
+ if(running)return;
+ running=true;
+ ended=false;
+ last=performance.now();
+ elapsed=0;
+ $("message").textContent="Game on!";
+
+ if(game==="drive")newQuestion();
+
+ if(game==="zombie"){
+  foes=[];
+  for(let i=0;i<Math.min(5,wave+1);i++)spawnFoe();
+ }
+
+ if(game==="minecraft"){
+  blocks=[];
+  for(let i=0;i<18;i++){
+   blocks.push({
+    x:45+rand(700),y:105+rand(260),
+    type:["wood","stone","iron","gold","diamond","netherite"][rand(6)],
+    alive:true
+   });
+  }
+ }
+ requestAnimationFrame(loop);
+}
+
+function end(msg,won=false){
+ running=false;
+ ended=true;
+ $("message").textContent=msg+(won?" 🏆":"");
+ if(won){
+  saved.wins++;
+  saved.coins+=Math.max(1,Math.floor(score/5));
+  save();
+ }
+ $("start").textContent="↻ Play Again";
+}
+
+function win(){
+ if(running)end("YOU WIN!",true);
+}
+
+function addFeet(){
+ if(!running)return;
+ ft+=25;
+ score=ft;
+ $("message").textContent=ft>=10000
+  ?"Milky Way escaped!"
+  :ft>=2500
+  ?"You reached space! Keep going to 10,000 FT."
+  :"+25 FT! Keep tapping!";
+ updateHud();
+ if(ft>=10000)win();
+}
+
+function newQuestion(){
+ question.a=rand(13);
+ question.b=rand(13);
+ question.ans=question.a*question.b;
+ $("question").textContent=question.a+" × "+question.b+" = ?";
+ $("answers").innerHTML="";
+ const opts=new Set([question.ans]);
+ while(opts.size<4)opts.add(Math.max(0,question.ans+rand(25)-12));
+ [...opts].sort(()=>Math.random()-.5).forEach(n=>{
+  const b=document.createElement("button");
+  b.textContent=n;
+  b.onclick=()=>answer(n);
+  $("answers").appendChild(b);
+ });
+}
+
+function answer(n){
+ if(!running||game!=="drive")return;
+ if(n===question.ans){
+  score+=10;
+  speed++;
+  player.x=clamp(player.x+35,80,720);
+  $("message").textContent="Correct! +10 points!";
+  if(score>=100){win();return;}
+ }else{
+  $("message").textContent="Not quite! Try the next question.";
+  speed=Math.max(0,speed-1);
+ }
+ updateHud();
+ newQuestion();
+}
+
+function attack(){
+ if(!running||game!=="zombie")return;
+ const f=foes.find(f=>f.alive);
+ if(f){
+  f.hp--;
+  if(f.hp<=0){
+   f.alive=false;
+   score+=10;
+   saved.coins+=5;
+   save();
+   $("message").textContent="Zombie defeated! +5 coins.";
+  }else $("message").textContent="Zombie hit! Hit it again.";
+ }
+ if(foes.every(f=>!f.alive))$("message").textContent="Wave cleared! Tap Next Wave.";
+ updateHud();
+}
+
+function heal(){
+ if(saved.coins>=50&&health<100){
+  saved.coins-=50;
+  health=Math.min(100,health+35);
+  save();
+  updateHud();
+ }else $("message").textContent="You need 50 coins and missing health to heal.";
+}
+
+function nextWave(){
+ if(!running||game!=="zombie")return;
+ wave++;
+ foes=[];
+ for(let i=0;i<Math.min(20,wave+1);i++)spawnFoe();
+ $("sub").textContent="Wave "+wave+" • Defeat every zombie";
+ $("message").textContent="Wave "+wave+" started!";
+}
+
+function fight(who){
+ if(!running||game!=="battle")return;
+ const target=who===1?p2:player;
+ target.hp=(target.hp||100)-15;
+ score+=5;
+ $("message").textContent="Player "+who+" attacked!";
+ if(target.hp<=0)end("Player "+(who===1?2:1)+" wins!",true);
+ updateHud();
+}
+
+function mine(){
+ if(!running||game!=="minecraft")return;
+ const b=blocks.find(b=>b.alive);
+ if(b){
+  b.alive=false;
+  craft[b.type]=(craft[b.type]||0)+1;
+  score+=5;
+  $("message").textContent="Mined "+b.type+". Inventory: "+
+   Object.entries(craft).map(([k,v])=>k+": "+v).join(", ");
+  if(blocks.every(b=>!b.alive)){
+   for(let i=0;i<18;i++){
+    blocks.push({
+     x:45+rand(700),y:105+rand(260),
+     type:["wood","stone","iron","gold","diamond","netherite"][rand(6)],
+     alive:true
+    });
+   }
+  }
+ }
+ updateHud();
+}
+
+function craftTool(){
+ const recipes={
+  "Stone Pickaxe":{stone:3},
+  "Iron Pickaxe":{iron:3},
+  "Gold Pickaxe":{gold:5},
+  "Diamond Pickaxe":{diamond:6},
+  "Netherite Pickaxe":{netherite:3,diamond:1}
+ };
+ const name=selectedTool==="Wood Pickaxe"?"Stone Pickaxe":selectedTool;
+ const recipe=recipes[name];
+ if(Object.entries(recipe).every(([k,v])=>(craft[k]||0)>=v)){
+  Object.entries(recipe).forEach(([k,v])=>craft[k]-=v);
+  selectedTool=name;
+  $("message").textContent="Crafted "+name+"!";
+ }else{
+  $("message").textContent="Need materials: "+
+   Object.entries(recipe).map(([k,v])=>v+" "+k).join(", ");
+ }
+}
+
+function cycleTool(){
+ const tools=["Wood Pickaxe","Stone Pickaxe","Iron Pickaxe","Gold Pickaxe","Diamond Pickaxe","Netherite Pickaxe"];
+ selectedTool=tools[(tools.indexOf(selectedTool)+1)%tools.length];
+ $("message").textContent="Selected "+selectedTool;
+}
+
+function collect(){
+ if(!running)return;
+ const c=coins.find(c=>Math.hypot(c.x-player.x,c.y-player.y)<85);
+ if(c){
+  coins.splice(coins.indexOf(c),1);
+  score+=10;
+  saved.coins++;
+  save();
+  spawnCoin();
+  $("message").textContent="Coin collected! +1 coin.";
+ }else $("message").textContent="Move closer to a coin, then collect.";
+ updateHud();
+}
+
+function jump(){
+ if(running&&game==="roblox"&&player.y>=330)player.vy=-11;
+}
+
+function move(d){
+ if(!running)return;
+ const step=game==="street"?10:8;
+ if(d==="left")player.x-=step;
+ if(d==="right")player.x+=step;
+ if(d==="up")player.y-=step;
+ if(d==="down")player.y+=step;
+ player.x=clamp(player.x,18,782);
+ player.y=clamp(player.y,60,430);
+
+ if(game==="coins"){
+  const c=coins.find(c=>Math.hypot(c.x-player.x,c.y-player.y)<28);
+  if(c){
+   coins.splice(coins.indexOf(c),1);
+   score+=10;
+   saved.coins++;
+   save();
+   spawnCoin();
+   updateHud();
+  }
+ }
+}
+
+function background(){
+ const g=ctx.createLinearGradient(0,0,0,450);
+ if(game==="space"){
+  g.addColorStop(0,"#10102e");g.addColorStop(1,"#303b70");
+ }else if(game==="zombie"){
+  g.addColorStop(0,"#182b2b");g.addColorStop(1,"#344b3a");
+ }else if(game==="street"||game==="drive"){
+  g.addColorStop(0,"#43799a");g.addColorStop(.58,"#b3c9c5");
+  g.addColorStop(.59,"#35424b");g.addColorStop(1,"#151d2b");
+ }else if(game==="minecraft"){
+  g.addColorStop(0,"#87b9df");g.addColorStop(.6,"#b4d0d5");
+  g.addColorStop(.6,"#537f49");g.addColorStop(1,"#395139");
+ }else{
+  g.addColorStop(0,"#345b78");g.addColorStop(.62,"#80a2aa");
+  g.addColorStop(.63,"#45654d");g.addColorStop(1,"#1d3936");
+ }
+ ctx.fillStyle=g;
+ ctx.fillRect(0,0,800,450);
+
+ if(game==="space"){
+  for(let i=0;i<65;i++){
+   ctx.fillStyle=i%3?"#c9d8ff":"#a58fff";
+   ctx.fillRect((i*139+17)%800,(i*71+frame*.12)%450,2,2);
+  }
+ }
+
+ if(game==="street"||game==="drive"){
+  ctx.fillStyle="#303a43";ctx.fillRect(225,0,350,450);
+  ctx.strokeStyle="#e4d9a7";ctx.lineWidth=4;
+  ctx.setLineDash([24,22]);ctx.lineDashOffset=-frame%46;
+  ctx.beginPath();ctx.moveTo(400,0);ctx.lineTo(400,450);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle="#53616c";ctx.fillRect(210,0,12,450);ctx.fillRect(578,0,12,450);
+ }
+
+ if(game==="minecraft"){
+  for(let i=0;i<10;i++){
+   ctx.fillStyle=["#567a47","#7e6744","#687d88"][i%3];
+   ctx.fillRect(i*82,270,82,35);
+   ctx.fillRect(i*82,305,82,70);
+  }
+ }
+}
+
+function drawPerson(x,y,color,s=1){
+ ctx.fillStyle="#17222c";ctx.fillRect(x-14*s,y-5*s,29*s,8*s);
+ ctx.fillStyle=color;ctx.fillRect(x-10*s,y-25*s,20*s,22*s);
+ ctx.fillStyle="#f1c69c";ctx.fillRect(x-9*s,y-41*s,18*s,17*s);
+ ctx.fillStyle="#202c42";ctx.fillRect(x-10*s,y-43*s,20*s,7*s);
+}
+
+function drawCar(x,y,color){
+ ctx.fillStyle="#10151e";
+ ctx.beginPath();ctx.ellipse(x,y+11,32,8,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle=color;
+ ctx.beginPath();
+ ctx.moveTo(x-34,y+5);ctx.lineTo(x-27,y-10);
+ ctx.lineTo(x-12,y-22);ctx.lineTo(x+15,y-22);
+ ctx.lineTo(x+30,y-8);ctx.lineTo(x+35,y+5);
+ ctx.closePath();ctx.fill();
+ ctx.fillStyle="#9bd9ef";
+ ctx.beginPath();ctx.moveTo(x-10,y-19);ctx.lineTo(x+10,y-19);
+ ctx.lineTo(x+20,y-8);ctx.lineTo(x-17,y-8);ctx.fill();
+ ctx.fillStyle="#e7ebef";
+ ctx.fillRect(x-28,y+1,8,5);ctx.fillRect(x+20,y+1,8,5);
+}
+
+function draw(){
+ background();
+ ctx.textAlign="center";
+
+ if(game==="drive"||game==="street"){
+  drawCar(player.x,player.y,game==="drive"?"#a6a0ff":"#ff8c47");
+  if(game==="street"){
+   for(let i=0;i<4;i++){
+    const y=(i*133+frame*3)%480-20;
+    drawCar(280+(i%2)*240,y,"#647f95");
+    if(Math.abs(y-player.y)<36&&Math.abs((280+(i%2)*240)-player.x)<45&&running)health-=.2;
+   }
+   ctx.fillStyle="white";ctx.font="bold 15px Arial";ctx.fillText("FINISH →",660,50);
+  }
+ }
+
+ if(game==="battle"){
+  ctx.fillStyle="#202d49";ctx.fillRect(30,40,740,360);
+  for(let i=0;i<8;i++){
+   ctx.fillStyle="#344661";ctx.fillRect(80+i*85,80+(i%2)*200,35,35);
+  }
+  drawPerson(player.x,player.y,"#e7b45c",1.3);
+  drawPerson(p2.x,p2.y,"#ed697a",1.3);
+  ctx.fillStyle="white";ctx.font="bold 17px Arial";
+  ctx.fillText("P1 "+health+" HP",player.x,player.y-55);
+  ctx.fillText("P2 "+p2.hp+" HP",p2.x,p2.y-55);
+ }
+
+ if(game==="zombie"){
+  ctx.fillStyle="#48554c";ctx.fillRect(70,100,660,270);
+  ctx.fillStyle="#28382f";ctx.fillRect(300,135,200,175);
+  ctx.fillStyle="#78624b";ctx.fillRect(340,185,120,125);
+  drawPerson(player.x,player.y,"#4e9dff",1.2);
+  foes.forEach(f=>{
+   if(!f.alive)return;
+   drawPerson(f.x,f.y,"#a3b89a",1.05);
+   ctx.fillStyle="#ff6e67";ctx.fillRect(f.x-13,f.y-50,26,4);
+  });
+  ctx.fillStyle="white";ctx.font="bold 18px Arial";ctx.fillText("WAVE "+wave,400,35);
+ }
+
+ if(game==="space"){
+  ctx.fillStyle="#9ba8c4";ctx.beginPath();ctx.arc(620,130,65,0,7);ctx.fill();
+  ctx.fillStyle="#4d5b8c";ctx.beginPath();
+  ctx.arc(610,117,20,0,7);ctx.arc(643,145,13,0,7);ctx.fill();
+  ctx.save();ctx.translate(player.x,player.y);ctx.rotate(-.35);
+  ctx.fillStyle="#e9edf8";ctx.beginPath();
+  ctx.moveTo(0,-45);ctx.lineTo(22,22);ctx.lineTo(0,13);ctx.lineTo(-22,22);
+  ctx.closePath();ctx.fill();ctx.fillStyle="#f5a65d";ctx.fillRect(-7,18,14,18);ctx.restore();
+  ctx.fillStyle="white";ctx.font="bold 22px Arial";ctx.fillText(ft+" FT",400,65);
+  ctx.font="14px Arial";
+  ctx.fillText(ft<2500?"Destination: Space — 2,500 FT":ft<10000?"Escape the Milky Way — 10,000 FT":"Galaxy escaped!",400,95);
+ }
+
+ if(game==="coins"){
+  coins.forEach(c=>{
+   ctx.fillStyle="#ffdf70";ctx.beginPath();ctx.arc(c.x,c.y,c.r+4,0,7);ctx.fill();
+   ctx.fillStyle="#9c681e";ctx.beginPath();ctx.arc(c.x,c.y,c.r,0,7);ctx.fill();
+   ctx.fillStyle="#ffdf70";ctx.font="bold 13px Arial";ctx.fillText("$",c.x,c.y+5);
+  });
+  drawPerson(player.x,player.y,"#a9a0ff",1.25);
+ }
+
+ if(game==="roblox"){
+  ctx.fillStyle="#3d7650";ctx.fillRect(0,360,800,90);
+  for(let i=0;i<5;i++){
+   const x=35+i*165,y=320-(i%3)*55;
+   ctx.fillStyle="#7e96b4";ctx.fillRect(x,y,105,18);
+   ctx.fillStyle="#566e8d";ctx.fillRect(x,y+18,105,12);
+  }
+  ctx.fillStyle="#e16d67";ctx.fillRect(335,357,95,7);
+  drawPerson(player.x,player.y,"#efb95c",1.3);
+  ctx.fillStyle="white";ctx.font="bold 14px Arial";ctx.fillText("CHECKPOINT →",690,295);
+ }
+
+ if(game==="minecraft"){
+  blocks.forEach(b=>{
+   if(!b.alive)return;
+   const colors={wood:"#93613d",stone:"#87919a",iron:"#a8b8be",gold:"#e5b84d",diamond:"#48d8cf",netherite:"#564b65"};
+   ctx.fillStyle=colors[b.type];ctx.fillRect(b.x,b.y,35,35);
+   ctx.strokeStyle="#26364a";ctx.strokeRect(b.x,b.y,35,35);
+   ctx.fillStyle="#182534";ctx.font="10px Arial";ctx.fillText(b.type,b.x+17,b.y-5);
+  });
+  drawPerson(player.x,player.y,"#6c91c6",1.25);
+  ctx.fillStyle="white";ctx.font="bold 15px Arial";ctx.fillText(selectedTool,400,35);
+  ctx.textAlign="left";ctx.font="13px Arial";
+  ctx.fillText("Inventory: "+Object.entries(craft).map(([k,v])=>k+" "+v).join(" • "),20,425);
+ }
+
+ if(!running){
+  ctx.fillStyle="#07101b9c";ctx.fillRect(0,0,800,450);
+  ctx.fillStyle="white";ctx.font="900 30px Arial";
+  ctx.fillText(ended?"ROUND COMPLETE":"READY TO PLAY",400,210);
+  ctx.font="15px Arial";
+  ctx.fillText(ended?"Press Play Again to restart":"Press Start Game below",400,245);
+ }
+}
+
+function drawMenu(){
+ ctx.fillStyle="#17243b";ctx.fillRect(0,0,800,450);
+ ctx.fillStyle="#b3a4ff";ctx.font="900 36px Arial";ctx.textAlign="center";
+ ctx.fillText("THE INFINITE GAME",400,170);
+ ctx.fillStyle="#dce6f7";ctx.font="18px Arial";
+ ctx.fillText("Choose a world. Begin your adventure.",400,210);
+ ctx.fillStyle="#7389a7";ctx.font="15px Arial";
+ ctx.fillText("8 GAME WORLDS • ONE HUB",400,250);
+}
+
+function updateHud(){
+ $("score").textContent=game==="space"?ft:score;
+ $("health").textContent=Math.max(0,Math.round(health));
+ $("clock").textContent=Math.max(0,Math.ceil(time));
+}
+
+function loop(now){
+ if(!running)return;
+ const dt=Math.min(.05,(now-last)/1000||.016);
+ last=now;elapsed+=dt;frame++;
+
+ if(game==="drive"||game==="street"){
+  time-=dt;
+  if(time<=0){
+   time=0;
+   end("Time is up! Score: "+score,score>=100);
+   draw();updateHud();return;
+  }
+ }
+
+ if(game==="zombie"){
+  foes.forEach(f=>{
+   if(!f.alive)return;
+   const dx=player.x-f.x,dy=player.y-f.y;
+   const d=Math.hypot(dx,dy)||1;
+   f.x+=dx/d*dt*13;f.y+=dy/d*dt*13;
+   if(d<29&&invuln<=0){health-=5;invuln=.6;}
+  });
+  if(health<=0){health=0;end("The zombies got you!");}
+ }
+
+ if(game==="street"){
+  coins.forEach(c=>c.y+=dt*160);
+  coins=coins.filter(c=>c.y<460);
+  if(health<=0)end("Crash! Race over.");
+  if(elapsed>=45)win();
+ }
+
+ if(game==="roblox"){
+  player.vy+=.45;player.y+=player.vy;
+  if(player.y>335){player.y=335;player.vy=0;}
+  if(player.x>740){score+=50;win();}
+  if(player.x>325&&player.x<440&&player.y>330){
+   player.x=65;player.y=335;health-=10;
+   $("message").textContent="Hazard! Return to checkpoint.";
+  }
+ }
+
+ if(game==="battle"){
+  if(keys.w)player.y-=2;
+  if(keys.s)player.y+=2;
+  if(keys.a)player.x-=2;
+  if(keys.d)player.x+=2;
+  if(keys.ArrowUp)p2.y-=2;
+  if(keys.ArrowDown)p2.y+=2;
+  if(keys.ArrowLeft)p2.x-=2;
+  if(keys.ArrowRight)p2.x+=2;
+  player.x=clamp(player.x,20,780);
+  player.y=clamp(player.y,50,410);
+  p2.x=clamp(p2.x,20,780);
+  p2.y=clamp(p2.y,50,410);
+ }
+
+ if(game==="coins"){
+  if(coins.length<8&&Math.random()<.025)spawnCoin();
+  if(keys.w)move("up");
+  if(keys.s)move("down");
+  if(keys.a)move("left");
+  if(keys.d)move("right");
+ }
+
+ if(game==="minecraft"){
+  if(keys.w)player.y-=1.5;
+  if(keys.s)player.y+=1.5;
+  if(keys.a)player.x-=1.5;
+  if(keys.d)player.x+=1.5;
+  player.x=clamp(player.x,15,785);
+  player.y=clamp(player.y,55,405);
+ }
+
+ if(game==="zombie"||game==="battle")health=clamp(health,0,100);
+ invuln=Math.max(0,invuln-dt);
+ updateHud();draw();
+ if(running)requestAnimationFrame(loop);
+}
+
+document.querySelectorAll("[data-game]").forEach(b=>{
+ b.addEventListener("click",()=>openGame(b.dataset.game));
+});
+
+$("back").onclick=home;
+
+document.querySelectorAll("[data-move]").forEach(b=>{
+ b.addEventListener("click",()=>{
+  const d=b.dataset.move;
+  if(game==="roblox"&&d==="up")jump();
+  else if(game==="space")addFeet();
+  else if(game==="zombie"&&d==="up")attack();
+  else move(d);
+ });
+});
+
+document.addEventListener("keydown",e=>{
+ const k=e.key;
+ if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(k))e.preventDefault();
+ keys[k.length===1?k.toLowerCase():k]=true;
+ if(k===" "&&game==="roblox")jump();
+ if(k.toLowerCase()==="f"&&game==="battle")fight(1);
+ if(k==="Enter"&&game==="battle")fight(2);
+ if(k.toLowerCase()==="e"&&game==="minecraft")mine();
+ if(k===" "&&game==="zombie")attack();
+});
+
+document.addEventListener("keyup",e=>{
+ keys[e.key.length===1?e.key.toLowerCase():e.key]=false;
+});
+
+canvas.addEventListener("pointerdown",()=>{
+ if(!running)return;
+ if(game==="space")addFeet();
+ else if(game==="coins")collect();
+ else if(game==="zombie")attack();
+ else if(game==="minecraft")mine();
+ else if(game==="roblox")jump();
+});
+
+drawMenu();
+})();
+</script>
+</body>
+</html>
